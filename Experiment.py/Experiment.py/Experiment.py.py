@@ -1,3 +1,5 @@
+import math
+
 # Process class to represent each process
 class Process:
     def __init__(self, name, arrival_time, burst_time):
@@ -150,6 +152,85 @@ def efficient_dynamic_round_robin():
     
     return completed_processes, context_switches
 
+
+def smart_dynamic_round_robin():
+    processes = [
+    Process("P0", 0, 8),
+    Process("P1", 2, 6),
+    Process("P2", 7, 11),
+    Process("P3", 0, 5)]
+    context_switches = 0
+    time = 0
+    completed_processes = []
+    ready_queue = []
+    n = len(processes)
+    last_run_process = None;
+    added_process = False;
+
+    while len(completed_processes) < n:
+        added_process = False
+        processes_to_remove = []
+
+        for process in processes:
+            if process.arrival_time <= time:
+                ready_queue.append(process)
+                processes_to_remove.append(process)
+                added_process = True
+
+        for process in processes_to_remove:
+            processes.remove(process)
+
+        if added_process:
+            # sort the processes
+            ready_queue = sorted(ready_queue, key=lambda process: process.remaining_time)
+            # calculate the differences between adjacent burst times
+            differences = [ready_queue[i+1].remaining_time - ready_queue[i].remaining_time for i in range(len(ready_queue)-1)]
+            # calculate the average of the differences
+            STQ = sum(differences) / len(differences)
+            Delta = STQ//2
+            STQ = STQ // 1
+        
+        # Print the current status of the ready queue
+        print(f"Time {time}: [", end="")
+        for process in ready_queue:
+            print(process.name, end=", ")
+        print("]")
+        processes_to_move_to_back = []
+
+
+
+        for process_index, process in enumerate(ready_queue):
+            if (process.remaining_time <= (STQ + Delta) or (len(ready_queue) == 1)):
+                quantum = process.remaining_time
+                time_executed = process.execute(quantum)
+                if process != last_run_process:
+                    context_switches += 1
+                process.completion_time = time + time_executed
+                process.turnaround_time = process.completion_time - process.arrival_time;
+                completed_processes.append(process)
+                last_run_process = None;
+            else:
+                quantum = STQ
+                if process != last_run_process:
+                    context_switches += 1
+                time_executed = process.execute(quantum)
+                if process.is_completed():
+                    process.completion_time = time + time_executed
+                    process.turnaround_time = process.completion_time - process.arrival_time;
+                    completed_processes.append(process)
+                    last_run_process = None;
+                else:
+                    last_run_process = process
+        
+            time += quantum
+
+        for process in completed_processes:
+            if process in ready_queue:
+                ready_queue.remove(process)
+
+    
+    return completed_processes, context_switches
+
 # Example usage
 processes = [
     Process("A", 0, 3),
@@ -159,8 +240,8 @@ processes = [
     Process("E", 8, 2)]
 quantum = 1
 
-completed_processes, context_switches = efficient_dynamic_round_robin()
-
+#completed_processes, context_switches = efficient_dynamic_round_robin()
+completed_processes, context_switches = smart_dynamic_round_robin()
 #completed_processes, context_switches = round_robin(processes, quantum)
 
 # Print the completion order and turnaround time for each process
@@ -168,5 +249,3 @@ for process in completed_processes:
     print(f"{process.name}: Arrival time = {process.arrival_time}, Burst time = {process.burst_time}, Turnaround time = {process.turnaround_time}, Waiting time = {process.completion_time - process.arrival_time - process.burst_time}")
 
 print(f"context switches: {context_switches}")
-
-efficient_dynamic_round_robin()
