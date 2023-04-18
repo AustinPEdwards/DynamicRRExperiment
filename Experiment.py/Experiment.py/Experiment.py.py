@@ -105,6 +105,11 @@ def efficient_dynamic_round_robin():
         elif all(process.burst_time > quantum for process in ready_queue):
                     quantum = max(process.burst_time for process in ready_queue)
         
+                            # Print the current status of the ready queue
+        print(f"Time {time}: [", end="")
+        for process in ready_queue:
+            print(process.name, end=", ")
+        print("]")
         processes_to_move_to_back = []
         # Execute each process in the ready queue for the quantum time slice
         for process_index, process in enumerate(ready_queue):
@@ -121,7 +126,7 @@ def efficient_dynamic_round_robin():
                 else:
                     last_run_process = process
                     break
-
+        
             elif process.burst_time <= quantum:
                 if process != last_run_process:
                     context_switches += 1
@@ -135,6 +140,8 @@ def efficient_dynamic_round_robin():
             else:
                 processes_to_move_to_back.append(process)
 
+        for process in processes_to_move_to_back:
+            ready_queue.remove(process)
         for process in processes_to_move_to_back:
             ready_queue.append(process)
 
