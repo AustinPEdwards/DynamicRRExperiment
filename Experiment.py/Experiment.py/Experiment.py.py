@@ -31,6 +31,7 @@ class Process:
 
 # Round-robin scheduling algorithm
 def round_robin(processes, quantum):
+    print("Time Quantum: ", quantum)
     context_switches = 0
     time = 0
     completed_processes = []
@@ -115,6 +116,8 @@ def efficient_dynamic_round_robin(processes):
                 if process.remaining_time > BTmax:
                     BTmax = process.remaining_time
                     quantum = BTmax * 0.8
+                    print("Time Quantum: ", quantum)
+
         if all(process.remaining_time > quantum for process in ready_queue):
             quantum = max(process.remaining_time for process in ready_queue)
         
@@ -209,6 +212,9 @@ def smart_dynamic_round_robin(processes):
             Delta = STQ // 2
             if STQ == 0:
                 STQ += 1
+            print("Time Quantum: ", STQ)
+
+
 
         print(f"Time {time}: [", end="")
         for process in ready_queue:
@@ -284,7 +290,9 @@ def modified_median_dynamic_round_robin(processes):
         # Calculate the median remaining time
         median_BT = median(remaining_times)
         max_BT = ready_queue[-1:][0].remaining_time
-        TQ = sqrt(median_BT*max_BT)
+        TQ = round(sqrt(median_BT*max_BT))
+        print("Time Quantum: ", TQ)
+
         threshold = .2
         
         print(f"Time {time}: [", end="")
