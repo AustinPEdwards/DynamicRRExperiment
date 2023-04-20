@@ -159,7 +159,6 @@ def efficient_dynamic_round_robin(processes):
                 if not process.first_accessed:
                     process.first_time = time
                     process.first_accessed = True
-
                 #print(time_executed)
                 process.completion_time = time + time_executed
                 process.turnaround_time = process.completion_time - process.arrival_time
@@ -371,7 +370,7 @@ def generate_processes(num_processes, min_burst_time, max_burst_time, min_arriva
     return processes
 
 
-processes = generate_processes(10, 10, 50, 0, 10)
+processes = generate_processes(50, 0, 40, 0, 1000)
 
 #processes = [
 #    Process("P1", 0, 5),
