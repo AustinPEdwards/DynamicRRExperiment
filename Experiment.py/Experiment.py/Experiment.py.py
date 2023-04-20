@@ -2,7 +2,7 @@ import math
 from math import sqrt
 import random
 import copy
-from statistics import median
+from statistics import median, mean
 
 
 # Process class to represent each process
@@ -14,6 +14,8 @@ class Process:
         self.remaining_time = burst_time
         self.completion_time = None
         self.turnaround_time = None
+        self.first_accessed = False
+        self.first_time = None
     
     def execute(self, quantum):
         if self.remaining_time <= quantum:
@@ -27,11 +29,9 @@ class Process:
     def is_completed(self):
         return self.remaining_time == 0
 
-
-
-# Round-robin scheduling algorithm
 def round_robin(processes, quantum):
-    print("Time Quantum: ", quantum)
+    quantum = 2
+    ##print("Time Quantum: ", quantum)
     context_switches = 0
     time = 0
     completed_processes = []
@@ -57,16 +57,19 @@ def round_robin(processes, quantum):
             time += 1
             continue
 
-        print(f"Time {time}: [", end="")
-        for process in ready_queue:
-            print(process.name, end=", ")
-        print("]")
+        #print(f"Time {time}: [", end="")
+        #for process in ready_queue:
+        #    print(process.name, end=", ")
+        #print("]")
 
         while ready_queue:
             process = ready_queue.pop(0)
-            print(process.name, end=": ")
+            #print(process.name, end=": ")
             time_executed = process.execute(quantum)
-            print(time_executed)
+            if not process.first_accessed:
+                process.first_time = time
+                process.first_accessed = True
+            #print(time_executed)
             if process != last_run_process:
                 context_switches += 1
             if process.is_completed():
@@ -116,24 +119,27 @@ def efficient_dynamic_round_robin(processes):
                 if process.remaining_time > BTmax:
                     BTmax = process.remaining_time
                     quantum = BTmax * 0.8
-                    print("Time Quantum: ", quantum)
+                    #print("Time Quantum: ", quantum)
 
         if all(process.remaining_time > quantum for process in ready_queue):
             quantum = max(process.remaining_time for process in ready_queue)
         
-        print(f"Time {time}: [", end="")
-        for process in ready_queue:
-            print(process.name, end=", ")
-        print("]")
+        #print(f"Time {time}: [", end="")
+        #for process in ready_queue:
+        #    print(process.name, end=", ")
+        #print("]")
         processes_to_move_to_back = []
         # Execute each process in the ready queue for the quantum time slice
         for process_index, process in enumerate(ready_queue):
             if len(ready_queue) == 1:
                 if process != last_run_process:
                     context_switches += 1
-                print(process.name, end=": ")
+                #print(process.name, end=": ")
                 time_executed = process.execute(quantum)
-                print(time_executed)
+                if not process.first_accessed:
+                    process.first_time = time
+                    process.first_accessed = True
+                #print(time_executed)
                 if process.is_completed():
                     process.completion_time = time + time_executed
                     process.turnaround_time = process.completion_time - process.arrival_time;
@@ -148,9 +154,13 @@ def efficient_dynamic_round_robin(processes):
             elif process.remaining_time <= quantum:
                 if process != last_run_process:
                     context_switches += 1
-                print(process.name, end=": ")
+                #print(process.name, end=": ")
                 time_executed = process.execute(quantum)
-                print(time_executed)
+                if not process.first_accessed:
+                    process.first_time = time
+                    process.first_accessed = True
+
+                #print(time_executed)
                 process.completion_time = time + time_executed
                 process.turnaround_time = process.completion_time - process.arrival_time
                 completed_processes.append(process)
@@ -212,14 +222,13 @@ def smart_dynamic_round_robin(processes):
             Delta = STQ // 2
             if STQ == 0:
                 STQ += 1
-            print("Time Quantum: ", STQ)
 
 
 
-        print(f"Time {time}: [", end="")
-        for process in ready_queue:
-            print(process.name, end=", ")
-        print("]")
+        #print(f"Time {time}: [", end="")
+        #for process in ready_queue:
+        #    print(process.name, end=", ")
+        #print("]")
         process_index = 0
         actual_index = 0
         number_of_processes = len(ready_queue)
@@ -227,9 +236,12 @@ def smart_dynamic_round_robin(processes):
             process = ready_queue[actual_index]
             if (len(ready_queue) == 1) or (process.remaining_time <= (STQ + Delta)):
                 quantum = process.remaining_time
-                print(process.name, end=": ")
+                #print(process.name, end=": ")
                 time_executed = process.execute(quantum)
-                print(time_executed)
+                if not process.first_accessed:
+                    process.first_time = time
+                    process.first_accessed = True
+                #print(time_executed)
                 if process != last_run_process:
                     context_switches += 1
                 process.completion_time = time + time_executed
@@ -242,9 +254,12 @@ def smart_dynamic_round_robin(processes):
                 quantum = STQ
                 if process != last_run_process:
                     context_switches += 1
-                print(process.name, end=": ")
+                #print(process.name, end=": ")
                 time_executed = process.execute(quantum)
-                print(time_executed)
+                if not process.first_accessed:
+                    process.first_time = time
+                    process.first_accessed = True
+                #print(time_executed)
                 process_index += 1
                 actual_index += 1
 
@@ -291,14 +306,14 @@ def modified_median_dynamic_round_robin(processes):
         median_BT = median(remaining_times)
         max_BT = ready_queue[-1:][0].remaining_time
         TQ = round(sqrt(median_BT*max_BT))
-        print("Time Quantum: ", TQ)
+        #print("Time Quantum: ", TQ)
 
         threshold = .2
         
-        print(f"Time {time}: [", end="")
-        for process in ready_queue:
-            print(process.name, end=", ")
-        print("]")
+        #print(f"Time {time}: [", end="")
+        #for process in ready_queue:
+        #    print(process.name, end=", ")
+        #print("]")
 
         process_index = 0
         actual_index = 0
@@ -307,9 +322,12 @@ def modified_median_dynamic_round_robin(processes):
             process = ready_queue[actual_index]
             if (len(ready_queue) == 1) or (process.remaining_time <= (process.burst_time*threshold)) or (process.remaining_time <= TQ):
                 quantum = process.remaining_time
-                print(process.name, end=": ")
+                #print(process.name, end=": ")
                 time_executed = process.execute(quantum)
-                print(time_executed)
+                if not process.first_accessed:
+                    process.first_time = time
+                    process.first_accessed = True
+                #print(time_executed)
                 if process != last_run_process:
                     context_switches += 1
                 process.completion_time = time + time_executed
@@ -322,9 +340,12 @@ def modified_median_dynamic_round_robin(processes):
                 quantum = TQ
                 if process != last_run_process:
                     context_switches += 1
-                print(process.name, end=": ")
+                #print(process.name, end=": ")
                 time_executed = process.execute(quantum)
-                print(time_executed)
+                if not process.first_accessed:
+                    process.first_time = time
+                    process.first_accessed = True
+                #print(time_executed)
                 process_index += 1
                 actual_index += 1
 
@@ -350,16 +371,16 @@ def generate_processes(num_processes, min_burst_time, max_burst_time, min_arriva
     return processes
 
 
-processes = generate_processes(10, 1, 100, 0, 20)
+processes = generate_processes(10, 10, 50, 0, 10)
 
-processes = [
-    Process("P1", 0, 5),
-    Process("P2", 2, 7),
-    Process("P3", 4, 2),
-    Process("P4", 6, 4),
-    Process("P5", 8, 3)]
+#processes = [
+#    Process("P1", 0, 5),
+#    Process("P2", 0, 7),
+#    Process("P3", 0, 2),
+#    Process("P4", 0, 4),
+#    Process("P5", 0, 9)]
 
-quantum = 5
+quantum = 20
 
 print("15 processes with 20-50ms burst time ariving from 0-1,000ms")
 print()
@@ -368,16 +389,19 @@ temp_processes = copy.deepcopy(processes)
 completed_processes, context_switches = round_robin(temp_processes, quantum)
 total_turnaround_time = 0
 total_waiting_time = 0
+total_response_time = 0
 for process in completed_processes:
     #print(f"{process.name}: Arrival time = {process.arrival_time}, Burst time = {process.burst_time}, Turnaround time = {process.turnaround_time}, Waiting time = {process.completion_time - process.arrival_time - process.burst_time}")
     total_turnaround_time += process.turnaround_time
     total_waiting_time += process.completion_time - process.arrival_time - process.burst_time
+    total_response_time += process.first_time
 
 maximum_turnaround_time = max(process.turnaround_time for process in completed_processes)
 maximum_wait_time = max((process.completion_time - process.arrival_time - process.burst_time) for process in completed_processes)
 average_turnaround_time = total_turnaround_time / len(completed_processes)
 average_waiting_time = total_waiting_time / len(completed_processes)
-print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}    Maximum turnaround time: {maximum_turnaround_time}    Maximum wait time: {maximum_wait_time}\n")
+average_response_time = total_response_time / len(completed_processes)
+print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}     Average response time: {average_response_time}\n")
 print()
 
 
@@ -386,49 +410,59 @@ temp_processes = copy.deepcopy(processes)
 completed_processes, context_switches = efficient_dynamic_round_robin(temp_processes)
 total_turnaround_time = 0
 total_waiting_time = 0
+total_response_time = 0
 for process in completed_processes:
     #print(f"{process.name}: Arrival time = {process.arrival_time}, Burst time = {process.burst_time}, Turnaround time = {process.turnaround_time}, Waiting time = {process.completion_time - process.arrival_time - process.burst_time}")
     total_turnaround_time += process.turnaround_time
     total_waiting_time += process.completion_time - process.arrival_time - process.burst_time
+    total_response_time += process.first_time
 
 maximum_turnaround_time = max(process.turnaround_time for process in completed_processes)
 maximum_wait_time = max((process.completion_time - process.arrival_time - process.burst_time) for process in completed_processes)
 average_turnaround_time = total_turnaround_time / len(completed_processes)
 average_waiting_time = total_waiting_time / len(completed_processes)
-print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}    Maximum turnaround time: {maximum_turnaround_time}    Maximum wait time: {maximum_wait_time}\n")
+average_response_time = total_response_time / len(completed_processes)
+print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}     Average response time: {average_response_time}\n")
 print()
-
 
 print("Smart Dynamic Round Robin Algorithm")
 temp_processes = copy.deepcopy(processes)
 completed_processes, context_switches = smart_dynamic_round_robin(temp_processes)
 total_turnaround_time = 0
 total_waiting_time = 0
+total_response_time = 0
 for process in completed_processes:
     #print(f"{process.name}: Arrival time = {process.arrival_time}, Burst time = {process.burst_time}, Turnaround time = {process.turnaround_time}, Waiting time = {process.completion_time - process.arrival_time - process.burst_time}")
     total_turnaround_time += process.turnaround_time
     total_waiting_time += process.completion_time - process.arrival_time - process.burst_time
+    total_response_time += process.first_time
 
 maximum_turnaround_time = max(process.turnaround_time for process in completed_processes)
 maximum_wait_time = max((process.completion_time - process.arrival_time - process.burst_time) for process in completed_processes)
 average_turnaround_time = total_turnaround_time / len(completed_processes)
 average_waiting_time = total_waiting_time / len(completed_processes)
-print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}    Maximum turnaround time: {maximum_turnaround_time}    Maximum wait time: {maximum_wait_time}\n")
+average_response_time = total_response_time / len(completed_processes)
+print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}     Average response time: {average_response_time}\n")
 print()
+
 
 print("Modified Median Dynamic Round Robin")
 temp_processes = copy.deepcopy(processes)
 completed_processes, context_switches = modified_median_dynamic_round_robin(temp_processes)
 total_turnaround_time = 0
 total_waiting_time = 0
+total_response_time = 0
 for process in completed_processes:
     #print(f"{process.name}: Arrival time = {process.arrival_time}, Burst time = {process.burst_time}, Turnaround time = {process.turnaround_time}, Waiting time = {process.completion_time - process.arrival_time - process.burst_time}")
     total_turnaround_time += process.turnaround_time
     total_waiting_time += process.completion_time - process.arrival_time - process.burst_time
+    total_response_time += process.first_time
 
 maximum_turnaround_time = max(process.turnaround_time for process in completed_processes)
 maximum_wait_time = max((process.completion_time - process.arrival_time - process.burst_time) for process in completed_processes)
 average_turnaround_time = total_turnaround_time / len(completed_processes)
 average_waiting_time = total_waiting_time / len(completed_processes)
-print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}    Maximum turnaround time: {maximum_turnaround_time}    Maximum wait time: {maximum_wait_time}\n")
+average_response_time = total_response_time / len(completed_processes)
+print(f"context switches: {context_switches}     Average turnaround time: {average_turnaround_time}     Average waiting time: {average_waiting_time}     Average response time: {average_response_time}\n")
 print()
+
